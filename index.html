@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="./styles.css">
+    <script src="./script.js" defer></script>
+</head>
+<body>
+    <div class="header">
+        <h1>awesome library</h1>
+        <a href="https://github.com/woo-cell/library" target="_blank" rel="noopener noreferer"><img src="./images/github-mark.svg" alt="github profile"></a>
+    </div>
+<div class="add-a-book">
+
+</div>
+    <div class="main">
+        <div class="card-container">
+            <div class="card">
+                <dialog class="dialog">
+                    <button autofocus>Close</button>
+                    <form action="" method="">
+                        <label for="title">Book's title:
+                            <input type="text" id="title" placeholder="ex: The Art of War " maxlength="50" required>
+                        </label>
+                        <label for="author">Author's name:
+                            <input type="text" id="author" placeholder="ex: Sun Tzu" maxlength="50" required> 
+                        </label>
+                        <label for="pages" id="pages-container">Number of page: <span>integers only</span>
+                            <input type="number" pattern="[0-9]*" inputmode="numeric" title="Please enter a valid integer." id="pages" placeholder="ex: 130" required>
+                        </label>
+                        <button type="submit" id="add">Add</button>
+                    </form>
+                </dialog>
+                <button class="add-book">+</button>
+            </div>
+        </div>
+    </div>
+    <div class="footer">
+        <p>made by <a href="https://github.com/woo-cell" target="_blank" rel="noopener noreferer">Woo-Cell</a></p>
+    </div>
+    
+</body>
+</html>
