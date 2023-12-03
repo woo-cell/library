@@ -81,6 +81,17 @@ cardContainer.addEventListener("click", (e) => {
       const card = e.target.closest(".card");
       if (card) {
         card.remove();
+        removeBook(card);
       }
     }
-  });
+});
+
+function removeBook(card) {
+    let indexToRemove = myLibrary.findIndex((book) => book.name === card.children[0].textContent.slice(7) && book.author === card.children[1].textContent.slice(8) && book.pages === card.children[2].textContent.slice(7));
+    myLibrary.splice(indexToRemove,1)
+}
+
+Book.prototype.read = function () {
+    
+}
+
