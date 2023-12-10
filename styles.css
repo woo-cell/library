@@ -62,6 +62,11 @@ body {
     align-items: center;
 }
 
+.read {
+    height: 30px;
+    width: 30px;
+}
+
 .remove-button {
     margin: 5px;
     border-radius: 5px;
@@ -135,6 +140,13 @@ dialog > button:hover,
 label {
     display: flex;
     flex-direction: column;
+}
+
+.read-label {
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+    align-items: center;
 }
 
 input:invalid {

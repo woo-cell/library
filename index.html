@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Library</title>
+    <link rel="icon" type="image/x-icon" href="./images/favicon.png">
     <link rel="stylesheet" href="./styles.css">
     <script src="./script.js" defer></script>
 </head>
@@ -19,7 +20,7 @@
         <div class="card-container">
             <div class="card">
                 <dialog class="dialog">
-                    <button autofocus>Close</button>
+                    <button id="close" autofocus>Close</button>
                     <form action="" method="">
                         <label for="title">Book's title:
                             <input type="text" id="title" placeholder="ex: The Art of War " maxlength="50" required>
@@ -30,6 +31,7 @@
                         <label for="pages" id="pages-container">Number of page: <span>integers only</span>
                             <input type="number" pattern="[0-9]*" inputmode="numeric" title="Please enter a valid integer." id="pages" placeholder="ex: 130" required>
                         </label>
+                        <p id="error"></p>
                         <button type="submit" id="add">Add</button>
                     </form>
                 </dialog>

@@ -1,144 +1,187 @@
-const cardContainer = document.querySelector(".card-container");
-const myLibrary = []
+"use strict"
 
-function Book(title, author, pages) {
+class Library {
+  constructor() {
+    this.books = [];
+  }
+
+  addBook(book) {
+    this.books.push(book);
+  }
+
+  removeBook(title) {
+    this.books = this.books.filter((book) => book.title !== title);
+  }
+
+  isInLibrary(title) {
+    return this.books.some((book) => book.title === title);
+  }
+}
+
+class Book {
+  constructor(title,author,pages) {
     this.title = title;
     this.author = author;
     this.pages = pages;
-    this.read = false;
+    this.isRead = false;
+  }
 }
 
-Book.prototype.isRead = function() {
-    this.read = !this.read;
+const library = new Library();
+
+// retrieveing HTML elements
+const addBookBtn = document.querySelector(".add-book");
+const dialog = document.querySelector(".dialog");
+const inputTitle = document.getElementById("title");
+const inputAuthor = document.getElementById("author");
+const inputPages = document.getElementById("pages");
+const insertBookBtn = document.getElementById("add");
+const cardContainer = document.querySelector(".card-container");
+const closeModalBtn = document.getElementById("close");
+const error = document.getElementById("error");
+
+// logic
+const createBook = (e) => {
+  e.preventDefault();
+  let title = inputTitle.value;
+  let author = inputAuthor.value;
+  let pages = inputPages.value;
+
+  if (pages <= 0 || pages % 1 !== 0) {
+    throwIntegerError();
+  } else if (!library.isInLibrary(title) && title && author && pages > 0) {
+    const book = new Book(title,author,pages);
+    library.addBook(book);
+    createCard(book);
+    closeDialog();
+    resetInput();
+  }
 }
 
-function addBookToLibrary(book) {
-    myLibrary.push(book)
+const changeReadStatus = (e) => {
+  const readCard = e.target.closest(".card");
+  readCard.classList.toggle("is-read");
+  updateBook(readCard);
 }
 
-function insertBook(book) {
-    const card = createCard();
-
-    let pTitle = document.createElement("p");
-    let pAuthor = document.createElement("p");
-    let pPages = document.createElement("p");
-    pTitle.textContent = `Title: ${book.title}`;
-    pAuthor.textContent = `Author: ${book.author}`;
-    pPages.textContent = `Pages: ${book.pages.toString()}`;
-
-    let dRead = createReadContainer();
- 
-    let check = createCheckbox();
-    check.addEventListener("change", () => {
-        const index = Array.from(cardContainer.children).indexOf(card) - 1; // the "add book" button is in a card and has index 0
-        const bookToUpdate = myLibrary[index];
-        bookToUpdate.isRead();
-        changeStyleIfRead(check);
-      });
-    dRead.appendChild(check);
-
-    let remBtn = createRemoveButton();
-
-    card.appendChild(pTitle);
-    card.appendChild(pAuthor);
-    card.appendChild(pPages);
-    card.appendChild(dRead);
-    card.appendChild(remBtn);
-    cardContainer.appendChild(card);   
+const updateBook = (element) => {
+  let cardContainerArray = Array.from(cardContainer.children); // creates an array from card container children (iterable)
+  let index = cardContainerArray.indexOf(element) -1 ; // the "add new book" card is index 0
+  library.books[index].isRead = !library.books[index].isRead;
 }
 
-function createCard() {
-    const card = document.createElement("div");
-    card.classList.add("card");
-    return card;
+const clickRemoveButton = (e) => {
+  const card = e.target.closest(".card");
+  removeBook(card);
+  card.remove();
 }
 
-function createReadContainer() {
-    let dRead = document.createElement("div");
-    dRead.classList.add("read-container");
-    let lRead = document.createElement("label");
-    lRead.textContent = "Read?";
-    lRead.setAttribute("for", "read");
-    dRead.appendChild(lRead);
-    return dRead;
+const removeBook = (element) => {
+  let cardContainerArray = Array.from(cardContainer.children);
+  let index = cardContainerArray.indexOf(element) -1 ;
+  let title = library.books[index].title;
+  library.removeBook(title);
 }
 
-function createCheckbox() {
-    let check = document.createElement("input");
-    check.setAttribute("type","checkbox");
-    check.setAttribute("id","read");
-    return check;
+// ui
+const showDialog = () => {
+  dialog.showModal();
+}
+
+const closeDialog = () => {
+  dialog.close();
+}
+
+const resetInput = () => {
+  inputTitle.value = "";
+  inputAuthor.value = "";
+  inputPages.value = "";
+}
+
+const throwIntegerError = () => {
+  error.textContent = "Only enter positive integers.";
+}
+
+const createCard = (book) => {
+  const card = createCardElement();
+  const titleDiv = createTitleElement(book);
+  const authorDiv = createAuthorElement(book);
+  const pagesDiv = createPagesElement(book);
+  const readDiv = createReadElement(book);
+  const removeButton = createRemoveButton();
+  appendElementsToCard(titleDiv,authorDiv,pagesDiv,card,readDiv,removeButton);
+  cardContainer.appendChild(card);
+  listen();
+}
+
+const createCardElement = () => {
+  const card = document.createElement("div");
+  card.classList.add("card");
+  return card;
+}
+
+const createTitleElement = (book) => {
+  const titleDiv = document.createElement("p");
+  titleDiv.textContent = `Title: ${book.title}`;
+  return titleDiv;
+}
+
+const createAuthorElement = (book) => {
+  const authorDiv = document.createElement("p");
+  authorDiv.textContent = `Author: ${book.author}`;
+  return authorDiv;
+}
+
+const createPagesElement = (book) => {
+  const pagesDiv = document.createElement("p");
+  pagesDiv.textContent = `Pages: ${book.pages}`;
+  return pagesDiv;
 }
 
 function createRemoveButton() {
-    let remBtn = document.createElement("button");
-    remBtn.classList.add("remove-button");
-    remBtn.textContent = "remove book";
-    return remBtn;
+  const remBtn = document.createElement("button");
+  remBtn.classList.add("remove-button");
+  remBtn.textContent = "remove book";
+  return remBtn;
 }
 
-// modal
-const dialog = document.querySelector("dialog");
-const showButton = document.querySelector("dialog + button");
-const closeButton = document.querySelector("dialog button");
-
-showButton.addEventListener("click", () => {
-    dialog.showModal();
-});
-
-closeButton.addEventListener("click", () => {
-    dialog.close();
-});
-
-const addBtn = document.getElementById("add");
-addBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    let title = document.getElementById("title");
-    let author = document.getElementById("author");
-    let pages = document.getElementById("pages");
-    if (pages.value%1 != 0) {
-        throwIntegerError();
-    } else if (title.value && author.value && pages.value) {
-        dialog.close();
-        const book = new Book(title.value,author.value,pages.value)
-        addBookToLibrary(book);
-        insertBook(book);
-        resetInput(title,author,pages);
-    }
-});
-
-function resetInput(title,author,pages) {
-    title.value = "";
-    author.value = "";
-    pages.value = "";
+const createReadElement = () => {
+  const readDiv = document.createElement("div");
+  readDiv.classList.add("read-container");
+  const readLabel = document.createElement("label");
+  readLabel.classList.add("read-label");
+  const checkbox = document.createElement("input");
+  checkbox.setAttribute("class","read");
+  checkbox.setAttribute("id","read");
+  checkbox.setAttribute("type","checkbox");
+  readLabel.textContent = `Read?`;
+  readLabel.appendChild(checkbox);
+  readDiv.appendChild(readLabel);
+  return readDiv;
 }
 
-function throwIntegerError() {
-    pages.value = "";
-    pages.setAttribute("placeholder", "only enter integers");
+const appendElementsToCard = (titleDiv,authorDiv,pagesDiv,card,readDiv,removeButton) => {
+  card.appendChild(titleDiv);
+  card.appendChild(authorDiv);
+  card.appendChild(pagesDiv);
+  card.appendChild(readDiv);
+  card.appendChild(removeButton);
 }
 
-const removeButtons = document.querySelectorAll(".remove-button");
-cardContainer.addEventListener("click", (e) => {
-    if (e.target.classList.contains("remove-button")) {
-      const card = e.target.closest(".card");
-      if (card) {
-        card.remove();
-        removeBook(card);
-      }
-    }
-});
+const listen = () => {
+  const readCheckbox = document.querySelectorAll(".read");
+  readCheckbox.forEach((check) => {
+    check.addEventListener("change", changeReadStatus);
+  });
 
-function removeBook(card) {
-    let indexToRemove = myLibrary.findIndex((book) => 
-    book.name === card.children[0].textContent.slice(7) && 
-    book.author === card.children[1].textContent.slice(8) && 
-    book.pages === card.children[2].textContent.slice(7));
-
-    myLibrary.splice(indexToRemove,1)
+  const removeButtons = document.querySelectorAll(".remove-button");
+  removeButtons.forEach((button) => {
+    button.addEventListener("click", clickRemoveButton);
+  });
 }
 
+// event listeners
+addBookBtn.addEventListener("click", showDialog);
+closeModalBtn.addEventListener("click", closeDialog);
+insertBookBtn.addEventListener("click", createBook);
 
-function changeStyleIfRead(c) {
-    c.parentElement.parentElement.classList.toggle("is-read");
-}
