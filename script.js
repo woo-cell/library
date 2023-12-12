@@ -27,161 +27,166 @@ class Book {
   }
 }
 
-const library = new Library();
+class Ui {
+  constructor() {
+    this.addBookBtn = document.querySelector(".add-book");
+    this.dialog = document.querySelector(".dialog");
+    this.inputTitle = document.getElementById("title");
+    this.inputAuthor = document.getElementById("author");
+    this.inputPages = document.getElementById("pages");
+    this.insertBookBtn = document.getElementById("add");
+    this.cardContainer = document.querySelector(".card-container");
+    this.closeModalBtn = document.getElementById("close");
+    this.error = document.getElementById("error");
+  }
 
-// retrieveing HTML elements
-const addBookBtn = document.querySelector(".add-book");
-const dialog = document.querySelector(".dialog");
-const inputTitle = document.getElementById("title");
-const inputAuthor = document.getElementById("author");
-const inputPages = document.getElementById("pages");
-const insertBookBtn = document.getElementById("add");
-const cardContainer = document.querySelector(".card-container");
-const closeModalBtn = document.getElementById("close");
-const error = document.getElementById("error");
+  init() {
+    this.addBookBtn.addEventListener("click", this.showDialog);
+    this.closeModalBtn.addEventListener("click", this.closeDialog);
+    this.insertBookBtn.addEventListener("click", this.createBook);
+  }
 
-// logic
-const createBook = (e) => {
-  e.preventDefault();
-  let title = inputTitle.value;
-  let author = inputAuthor.value;
-  let pages = inputPages.value;
+  createBook = (e) => {
+    e.preventDefault();
+    let title = this.inputTitle.value;
+    let author = this.inputAuthor.value;
+    let pages = this.inputPages.value;
+  
+    if (pages <= 0 || pages % 1 !== 0) {
+      this.throwIntegerError();
+    } else if (!library.isInLibrary(title) && title && author && pages > 0) {
+      const book = new Book(title,author,pages);
+      library.addBook(book);
+      this.createCard(book);
+      this.closeDialog();
+      this.resetInput();
+    }
+  }
 
-  if (pages <= 0 || pages % 1 !== 0) {
-    throwIntegerError();
-  } else if (!library.isInLibrary(title) && title && author && pages > 0) {
-    const book = new Book(title,author,pages);
-    library.addBook(book);
-    createCard(book);
-    closeDialog();
-    resetInput();
+  throwIntegerError()  {
+    this.error.textContent = "Only enter positive integers.";
+  }
+
+  createCard(book) {
+    const card = this.createCardElement();
+    const titleDiv = this.createTitleElement(book);
+    const authorDiv = this.createAuthorElement(book);
+    const pagesDiv = this.createPagesElement(book);
+    const readDiv = this.createReadElement(book);
+    const removeButton = this.createRemoveButton();
+    this.appendElementsToCard(titleDiv,authorDiv,pagesDiv,card,readDiv,removeButton);
+    this.cardContainer.appendChild(card);
+    this.listen();
+  }
+
+  closeDialog = () => {
+    this.dialog.close();
+  }
+
+  showDialog = () => {
+    console.log(this.dialog);
+    this.dialog.showModal();
+  }
+
+  createCardElement() {
+    const card = document.createElement("div");
+    card.classList.add("card");
+    return card;
+  }
+  
+  createTitleElement(book) {
+    const titleDiv = document.createElement("p");
+    titleDiv.textContent = `Title: ${book.title}`;
+    return titleDiv;
+  }
+
+  createAuthorElement(book) {
+    const authorDiv = document.createElement("p");
+    authorDiv.textContent = `Author: ${book.author}`;
+    return authorDiv;
+  }
+
+  createPagesElement(book) {
+    const pagesDiv = document.createElement("p");
+    pagesDiv.textContent = `Pages: ${book.pages}`;
+    return pagesDiv;
+  }
+
+  createReadElement() {
+    const readDiv = document.createElement("div");
+    readDiv.classList.add("read-container");
+    const readLabel = document.createElement("label");
+    readLabel.classList.add("read-label");
+    const checkbox = document.createElement("input");
+    checkbox.setAttribute("class","read");
+    checkbox.setAttribute("id","read");
+    checkbox.setAttribute("type","checkbox");
+    readLabel.textContent = `Read?`;
+    readLabel.appendChild(checkbox);
+    readDiv.appendChild(readLabel);
+    return readDiv;
+  }
+
+  createRemoveButton() {
+    const remBtn = document.createElement("button");
+    remBtn.classList.add("remove-button");
+    remBtn.textContent = "remove book";
+    return remBtn;
+  }
+
+  appendElementsToCard(titleDiv,authorDiv,pagesDiv,card,readDiv,removeButton) {
+    card.appendChild(titleDiv);
+    card.appendChild(authorDiv);
+    card.appendChild(pagesDiv);
+    card.appendChild(readDiv);
+    card.appendChild(removeButton);
+  }
+
+  listen() {
+    const readCheckbox = document.querySelectorAll(".read");
+    readCheckbox.forEach((check) => {
+      check.addEventListener("change", this.changeReadStatus);
+    });
+  
+    const removeButtons = document.querySelectorAll(".remove-button");
+    removeButtons.forEach((button) => {
+      button.addEventListener("click", this.clickRemoveButton);
+    });
+  }
+
+  changeReadStatus = (e) => {
+    const readCard = e.target.closest(".card");
+    readCard.classList.toggle("is-read");
+    this.updateBook(readCard);
+    console.log(library);
+  }
+
+  updateBook(element) {
+    let cardContainerArray = Array.from(this.cardContainer.children); // creates an array from card container children (iterable)
+    let index = cardContainerArray.indexOf(element) -1 ; // the "add new book" card is index 0
+    library.books[index].isRead = !library.books[index].isRead;
+  }
+
+  clickRemoveButton = (e) => {
+    const card = e.target.closest(".card");
+    this.removeBook(card);
+    card.remove();
+  }
+
+  removeBook(element) {
+    let cardContainerArray = Array.from(this.cardContainer.children);
+    let index = cardContainerArray.indexOf(element) -1 ;
+    let title = library.books[index].title;
+    library.removeBook(title);
+  }
+
+  resetInput () {
+    this.inputTitle.value = "";
+    this.inputAuthor.value = "";
+    this.inputPages.value = "";
   }
 }
 
-const changeReadStatus = (e) => {
-  const readCard = e.target.closest(".card");
-  readCard.classList.toggle("is-read");
-  updateBook(readCard);
-}
-
-const updateBook = (element) => {
-  let cardContainerArray = Array.from(cardContainer.children); // creates an array from card container children (iterable)
-  let index = cardContainerArray.indexOf(element) -1 ; // the "add new book" card is index 0
-  library.books[index].isRead = !library.books[index].isRead;
-}
-
-const clickRemoveButton = (e) => {
-  const card = e.target.closest(".card");
-  removeBook(card);
-  card.remove();
-}
-
-const removeBook = (element) => {
-  let cardContainerArray = Array.from(cardContainer.children);
-  let index = cardContainerArray.indexOf(element) -1 ;
-  let title = library.books[index].title;
-  library.removeBook(title);
-}
-
-// ui
-const showDialog = () => {
-  dialog.showModal();
-}
-
-const closeDialog = () => {
-  dialog.close();
-}
-
-const resetInput = () => {
-  inputTitle.value = "";
-  inputAuthor.value = "";
-  inputPages.value = "";
-}
-
-const throwIntegerError = () => {
-  error.textContent = "Only enter positive integers.";
-}
-
-const createCard = (book) => {
-  const card = createCardElement();
-  const titleDiv = createTitleElement(book);
-  const authorDiv = createAuthorElement(book);
-  const pagesDiv = createPagesElement(book);
-  const readDiv = createReadElement(book);
-  const removeButton = createRemoveButton();
-  appendElementsToCard(titleDiv,authorDiv,pagesDiv,card,readDiv,removeButton);
-  cardContainer.appendChild(card);
-  listen();
-}
-
-const createCardElement = () => {
-  const card = document.createElement("div");
-  card.classList.add("card");
-  return card;
-}
-
-const createTitleElement = (book) => {
-  const titleDiv = document.createElement("p");
-  titleDiv.textContent = `Title: ${book.title}`;
-  return titleDiv;
-}
-
-const createAuthorElement = (book) => {
-  const authorDiv = document.createElement("p");
-  authorDiv.textContent = `Author: ${book.author}`;
-  return authorDiv;
-}
-
-const createPagesElement = (book) => {
-  const pagesDiv = document.createElement("p");
-  pagesDiv.textContent = `Pages: ${book.pages}`;
-  return pagesDiv;
-}
-
-function createRemoveButton() {
-  const remBtn = document.createElement("button");
-  remBtn.classList.add("remove-button");
-  remBtn.textContent = "remove book";
-  return remBtn;
-}
-
-const createReadElement = () => {
-  const readDiv = document.createElement("div");
-  readDiv.classList.add("read-container");
-  const readLabel = document.createElement("label");
-  readLabel.classList.add("read-label");
-  const checkbox = document.createElement("input");
-  checkbox.setAttribute("class","read");
-  checkbox.setAttribute("id","read");
-  checkbox.setAttribute("type","checkbox");
-  readLabel.textContent = `Read?`;
-  readLabel.appendChild(checkbox);
-  readDiv.appendChild(readLabel);
-  return readDiv;
-}
-
-const appendElementsToCard = (titleDiv,authorDiv,pagesDiv,card,readDiv,removeButton) => {
-  card.appendChild(titleDiv);
-  card.appendChild(authorDiv);
-  card.appendChild(pagesDiv);
-  card.appendChild(readDiv);
-  card.appendChild(removeButton);
-}
-
-const listen = () => {
-  const readCheckbox = document.querySelectorAll(".read");
-  readCheckbox.forEach((check) => {
-    check.addEventListener("change", changeReadStatus);
-  });
-
-  const removeButtons = document.querySelectorAll(".remove-button");
-  removeButtons.forEach((button) => {
-    button.addEventListener("click", clickRemoveButton);
-  });
-}
-
-// event listeners
-addBookBtn.addEventListener("click", showDialog);
-closeModalBtn.addEventListener("click", closeDialog);
-insertBookBtn.addEventListener("click", createBook);
-
+const library = new Library();
+const ui = new Ui();
+ui.init();
