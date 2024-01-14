@@ -1,9 +1,33 @@
 "use strict";
-import { initializeApp } from "./localStorage.js";
-import { saveDataToStorage } from "./localStorage.js";
-import Book from "./book.js";
 
-class Ui {
+class Library {
+  constructor() {
+    this.books = [];
+  }
+
+  addBook(book) {
+    this.books.push(book);
+  }
+
+  removeBook(title) {
+    this.books = this.books.filter((book) => book.title !== title);
+  }
+
+  isInLibrary(title) {
+    return this.books.some((book) => book.title === title);
+  }
+}
+
+class Book {
+  constructor(title, author, pages) {
+    this.title = title;
+    this.author = author;
+    this.pages = pages;
+    this.isRead = false;
+  }
+}
+
+class UI {
   constructor() {
     this.addBookBtn = document.querySelector(".add-book");
     this.dialog = document.querySelector(".dialog");
@@ -16,29 +40,25 @@ class Ui {
     this.error = document.getElementById("error");
   }
 
-  init() {
-    this.addBookBtn.addEventListener("click", this.showDialog);
-    this.closeModalBtn.addEventListener("click", this.closeDialog);
-    this.insertBookBtn.addEventListener("click", this.createBook);
+  initialize() {
+    this.addBookBtn.addEventListener("click", this.showDialog.bind(this));
+    this.closeModalBtn.addEventListener("click", this.closeDialog.bind(this));
+    this.insertBookBtn.addEventListener("click", this.createBook.bind(this));
   }
 
-  createBook = (e) => {
-    e.preventDefault();
-    let title = this.inputTitle.value;
-    let author = this.inputAuthor.value;
-    let pages = this.inputPages.value;
+  showDialog() {
+    this.dialog.showModal();
+  }
 
-    if (pages <= 0 || pages % 1 !== 0) {
-      this.throwIntegerError();
-    } else if (!library.isInLibrary(title) && title && author && pages > 0) {
-      const book = new Book(title, author, pages);
-      library.addBook(book);
-      this.createCard(book);
-      this.closeDialog();
-      this.resetInput();
-    }
-    saveDataToStorage();
-  };
+  closeDialog() {
+    this.dialog.close();
+  }
+
+  resetInput() {
+    this.inputTitle.value = "";
+    this.inputAuthor.value = "";
+    this.inputPages.value = "";
+  }
 
   throwIntegerError() {
     this.error.textContent = "Only enter positive integers.";
@@ -51,26 +71,10 @@ class Ui {
     const pagesDiv = this.createPagesElement(book);
     const readDiv = this.createReadElement(book);
     const removeButton = this.createRemoveButton();
-    this.appendElementsToCard(
-      titleDiv,
-      authorDiv,
-      pagesDiv,
-      card,
-      readDiv,
-      removeButton
-    );
+
+    this.appendElementsToCard(titleDiv, authorDiv, pagesDiv, card, readDiv, removeButton);
     this.cardContainer.appendChild(card);
-    this.listen();
   }
-
-  closeDialog = () => {
-    this.dialog.close();
-  };
-
-  showDialog = () => {
-    console.log(this.dialog);
-    this.dialog.showModal();
-  };
 
   createCardElement() {
     const card = document.createElement("div");
@@ -96,7 +100,7 @@ class Ui {
     return pagesDiv;
   }
 
-  createReadElement() {
+  createReadElement(book) {
     const readDiv = document.createElement("div");
     readDiv.classList.add("read-container");
     const readLabel = document.createElement("label");
@@ -118,14 +122,7 @@ class Ui {
     return remBtn;
   }
 
-  appendElementsToCard(
-    titleDiv,
-    authorDiv,
-    pagesDiv,
-    card,
-    readDiv,
-    removeButton
-  ) {
+  appendElementsToCard(titleDiv, authorDiv, pagesDiv, card, readDiv, removeButton) {
     card.appendChild(titleDiv);
     card.appendChild(authorDiv);
     card.appendChild(pagesDiv);
@@ -133,62 +130,51 @@ class Ui {
     card.appendChild(removeButton);
   }
 
-  listen() {
-    const readCheckbox = document.querySelectorAll(".read");
-    readCheckbox.forEach((check) => {
-      check.addEventListener("change", this.changeReadStatus);
-    });
-
-    const removeButtons = document.querySelectorAll(".remove-button");
-    removeButtons.forEach((button) => {
-      button.addEventListener("click", this.clickRemoveButton);
-    });
-  }
-
-  changeReadStatus = (e) => {
+  changeReadStatus(e) {
     const readCard = e.target.closest(".card");
     readCard.classList.toggle("is-read");
     this.updateBook(readCard);
-    console.log(library);
-  };
-
-  updateBook(element) {
-    let cardContainerArray = Array.from(this.cardContainer.children); // creates an array from card container children (iterable)
-    let index = cardContainerArray.indexOf(element) - 1; // the "add new book" card is index 0
-    library.books[index].isRead = !library.books[index].isRead;
-    saveDataToStorage();
   }
 
-  clickRemoveButton = (e) => {
+  updateBook(element) {
+    const cardContainerArray = Array.from(this.cardContainer.children);
+    const index = cardContainerArray.indexOf(element) - 1;
+    library.books[index].isRead = !library.books[index].isRead;
+  }
+
+  clickRemoveButton(e) {
     const card = e.target.closest(".card");
     this.removeBook(card);
     card.remove();
-  };
+  }
 
   removeBook(element) {
-    let cardContainerArray = Array.from(this.cardContainer.children);
-    let index = cardContainerArray.indexOf(element) - 1;
-    let title = library.books[index].title;
+    const cardContainerArray = Array.from(this.cardContainer.children);
+    const index = cardContainerArray.indexOf(element) - 1;
+    const title = library.books[index].title;
     library.removeBook(title);
-    saveDataToStorage();
   }
 
-  resetInput() {
-    this.inputTitle.value = "";
-    this.inputAuthor.value = "";
-    this.inputPages.value = "";
-  }
+  createBook(e) {
+    e.preventDefault();
+    const title = this.inputTitle.value;
+    const author = this.inputAuthor.value;
+    const pages = this.inputPages.value;
 
-  initializeUi(library) {
-    console.log(library.books);
-    library.books.forEach((book) => {
-      this.createCard(book);
-    });
+    if (pages <= 0 || pages % 1 !== 0|| isNaN(pages)) {
+      this.throwIntegerError();
+      return;
+    }
+
+    const book = new Book(title, author, pages);
+    library.addBook(book);
+    this.createCard(book);
+    this.resetInput();
+    this.closeDialog();
   }
 }
 
-const library = initializeApp();
+const library = new Library();
+const ui = new UI();
 
-const ui = new Ui();
-ui.initializeUi(library);
-ui.init();
+ui.initialize();
